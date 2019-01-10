@@ -1,3 +1,3 @@
 wget https://download.lfd.uci.edu/pythonlibs/r5uhg2lo/Twisted-18.9.0-cp36-cp36m-win32.whl
 pip install Twisted-18.9.0-cp36-cp36m-win32.whl
-pip install scrapy pywin32 redis ipython requests
+pip install scrapy pywin32 redis ipython requests scrapy_redis
