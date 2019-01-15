@@ -1,8 +1,8 @@
 #encoding:utf-8
 from lxml import etree
 from concurrent import futures
-from crawlProxy.settings import USER_AGENT_LIST, MAX_WORKERS, URL_LIST, REDIS_HOST, REDIS_PORT, REDIS_DB, REDIS_KEY
-from crawlProxy.DB.RedisClient import RedisClient
+from settings import USER_AGENT_LIST, MAX_WORKERS, URL_LIST, REDIS_HOST, REDIS_PORT, REDIS_DB, REDIS_KEY
+from DB.RedisClient import RedisClient
 import random
 import time
 import requests
@@ -10,9 +10,9 @@ import requests
 
 rdb = RedisClient(
   name = REDIS_KEY,
-  host=REDIS_HOST,
-  port=REDIS_PORT,
-  db=REDIS_DB
+  host = REDIS_HOST,
+  port = REDIS_PORT,
+  db   = REDIS_DB
 )
 
 #Metaclass 为Crawl类动态添加方法和属性
@@ -33,20 +33,13 @@ class CrawlMetaclass(type):
         count += 1
     #抓取方法数量
     attrs['__CrawlCount__'] = count
-    print(attrs)
+    # print(attrs)
 
     return type.__new__(cls, name, bases, attrs)
 
 
 #抓取类
 class Crawl(object, metaclass=CrawlMetaclass):
-  def __init__(self):
-    self.db = RedisClient(
-      name = REDIS_KEY,
-      host=REDIS_HOST,
-      port=REDIS_PORT,
-      db=REDIS_DB
-    )
 
   #执行所有以'crawl_'开头的类方法 返回值保存到 proxies中
   #动态的调用所有以crawl_开头的方法
@@ -61,7 +54,7 @@ class Crawl(object, metaclass=CrawlMetaclass):
     return proxies
 
   #代理网站 抓取分析 以crawl开头
-  def crawl_kuaidaili(self, page_count=10):
+  def Crawl_kuaidaili(self, page_count=20):
     PAGE_NUM = 100
     #高匿
     INHA_URL = "https://www.kuaidaili.com/free/inha/%d/"
@@ -93,7 +86,7 @@ class Crawl(object, metaclass=CrawlMetaclass):
         yield proxy_info
 
   #
-  def crawl_xiladaili(self, page_count=10):
+  def Crawl_xiladaili(self, page_count=20):
     # 高匿
     INHA_URL = "http://www.xiladaili.com/gaoni/%s/"
 
@@ -113,10 +106,31 @@ class Crawl(object, metaclass=CrawlMetaclass):
 
         yield IP_PORT
 
+  #
+  def crawl_31f(self, page_count=1):
+    INHA_URL = "https://31f.cn/high-proxy/"
+    response = self.get_response(None, page_count, INHA_URL)
+    selector = etree.HTML(response)
+    tr_list = selector.xpath("//table[1]//tr")
+    for tr in tr_list:
+      IP = tr.xpath("./td[2]/text()")[0]
+      PORT = tr.xpath("./td[3]/text()")[0]
 
+      proxy_info = "%s:%s" % (IP, PORT)
+
+      yield proxy_info
 
   #获取响应数据
-  def get_response(self, start_url, page_count):
+  def get_response(self, start_url, page_count, stand_url=None):
+    if stand_url:
+      print("Crawl URL Link %s" % url)
+      # 头信息
+      HEADERS = {
+        "user-agent": random.choice(USER_AGENT_LIST),
+      }
+      req = requests.get(url, headers=HEADERS)
+      return req.text
+
     #循环页数
     for i in range(1, page_count):
       #随机暂停抓取的秒数
@@ -158,10 +172,10 @@ class Crawl(object, metaclass=CrawlMetaclass):
       if res.status_code == 200:
         print(ip, res.url, res.request.headers)
         #以set形式存储到redis中
-        self.db.sadd(ip)
+        rdb.sadd("http://%s" %ip)
         return ip
       else:
-        print("check_ip %s Error" %ip)
+        print("check_ip http://%s Error" %ip)
 
   #future 代理IP可用性检测
   def check_ip(self, res_list):
@@ -170,6 +184,10 @@ class Crawl(object, metaclass=CrawlMetaclass):
       res = executor.map(self.check_and_store, res_list)
     print(list(res))
 
+  #获取所有 获得到的代理IP
+  def get_all_proxies(self):
+    proxies = rdb.smembers()
+    return proxies
 
 if __name__ == '__main__':
   crawl = Crawl()

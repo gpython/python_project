@@ -107,6 +107,7 @@ DEFAULT_REQUEST_HEADERS = {
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
      'dangdang.middlewares.RandomUserAgent': 100,
+     'dangdang.middlewares.RandomProxy': 200,
 #    'dangdang.middlewares.DangdangDownloaderMiddleware': 543,
 }
 
@@ -144,3 +145,5 @@ ITEM_PIPELINES = {
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+PROXIES = ['http://45.55.157.87:80', 'http://43.245.218.255:33009', 'http://193.112.57.222:8118', 'http://202.129.28.162:55237', 'http://190.103.75.82:808', 'http://110.52.235.249:9999', 'http://124.93.201.59:42672', 'http://182.88.191.56:8123', 'http://209.34.29.9:8080', 'http://80.234.38.153:8080', 'http://195.189.110.12:42022', 'http://173.165.44.62:21776', 'http://119.82.253.98:54109', 'http://119.101.117.102:9999', 'http://195.88.16.145:39745', 'http://180.169.186.155:1080', 'http://121.40.138.161:8000', 'http://1.20.96.115:38553', 'http://220.134.24.215:31943', 'http://47.100.21.174:8118', 'http://1.20.102.3:59505', 'http://49.86.180.91:9999', 'http://114.234.82.222:9000', 'http://1.20.97.253:30174', 'http://103.9.188.168:56901', 'http://114.106.135.122:9999', 'http://201.244.107.202:59206', 'http://39.137.107.98:80', 'http://1.20.103.85:59608', 'http://103.56.233.246:31991', 'http://125.39.9.35:9000', 'http://111.177.178.145:9999', 'http://195.66.138.150:36573', 'http://118.174.220.231:40924', 'http://27.155.83.182:8081', 'http://124.89.33.59:50235']
+

@@ -5,17 +5,69 @@
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
+import base64
+from six.moves.urllib.parse import unquote
+try:
+  from urllib2 import _parse_proxy
+except ImportError:
+  from urllib.request import _parse_proxy
+from six.moves.urllib.parse import urlunparse
+from scrapy.utils.python import to_bytes
+
 from scrapy import signals
 import random
+
+class RandomProxy(object):
+  def __init__(self, proxies):
+    self.proxies = proxies
+    print(self.proxies)
+
+  @classmethod
+  def from_crawler(cls, crawler):
+    #settings.py文件中设置
+    # PROXYIES = [
+    #   "http://root:passwd@1.1.1.1:8080",
+    #   "http://root:passwd@1.1.1.1:8080",
+    #   "http://root:passwd@1.1.1.1:8080",
+    #   "http://root:passwd@1.1.1.1:8080"
+    # ]
+    proxies = crawler.settings.get("PROXIES")
+    return cls(proxies)
+
+  def _basic_auth_header(self, username, password):
+    user_pass = to_bytes(
+      '%s:%s' % (unquote(username), unquote(password)),
+      encoding=self.auth_encoding
+    )
+    return base64.b64encode(user_pass).strip()
+
+  def process_request(self, request, spider):
+    url = random.choice(self.proxies)
+    print(url)
+
+    orig_type = ""
+    proxy_type, user, password, hostport = _parse_proxy(url)
+    proxy_url = urlunparse((proxy_type or orig_type, hostport, '', '', '', ''))
+    print(proxy_url)
+    if user:
+      creds = self._basic_auth_header(user, password)
+    else:
+      creds = None
+
+    request.meta['proxy'] = proxy_url
+    if creds and not request.headers.get('Proxy-Authorization'):
+      request.headers['Proxy-Authorization'] = b'Basic ' + creds
+
 
 class RandomUserAgent(object):
   #请求发送之前给request的headers头赋值
   def process_request(self, request, spider):
     ua = random.choices(spider.settings.get("USER_AGENT_LIST"))
+    # proxy = random.choices(spider.settings.get("PROXIES"))
     #添加请求头
     request.headers["User-Agent"] = ua
     #添加请求代理 需要在request的meta信息中添加proxy字段
-    #request.meta["proxy"] = "http://proxy:port"
+    # request.meta["proxy"] = proxy
 
 
 class DangdangSpiderMiddleware(object):

@@ -10,14 +10,17 @@ REDIS_KEY = "PROXY::IP"
 MAX_WORKERS = 10
 
 URL_LIST = [
-  "https://www.163.com",
-  "https://www.baidu.com",
-  "https://www.sina.com.cn",
-  "https://www.qq.com/",
-  "https://ai.taobao.com",
-  "https://www.jd.com",
-  "https://www.tmall.com",
-  "https://www.taobao.com"
+  "http://category.dangdang.com",
+  "http://category.dangdang.com",
+  "http://category.dangdang.com",
+  "http://category.dangdang.com",
+  "http://category.dangdang.com",
+  "http://category.dangdang.com",
+  "http://category.dangdang.com",
+  "http://category.dangdang.com",
+  "http://category.dangdang.com",
+  "http://category.dangdang.com",
+  "http://category.dangdang.com",
 ]
 
 USER_AGENT_LIST = [

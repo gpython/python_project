@@ -15,7 +15,7 @@ class RedisClient(object):
     return self.__conn.srandmember(self.key_name, count)
 
   #返回集合中的所有成员
-  def smemebers(self):
+  def smembers(self):
     return self.__conn.smembers(self.key_name)
 
 
