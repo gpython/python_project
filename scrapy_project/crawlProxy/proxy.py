@@ -110,26 +110,27 @@ class Crawl(object, metaclass=CrawlMetaclass):
   def crawl_31f(self, page_count=1):
     INHA_URL = "https://31f.cn/high-proxy/"
     response = self.get_response(None, page_count, INHA_URL)
-    selector = etree.HTML(response)
-    tr_list = selector.xpath("//table[1]//tr")
-    for tr in tr_list:
-      IP = tr.xpath("./td[2]/text()")[0]
-      PORT = tr.xpath("./td[3]/text()")[0]
-
-      proxy_info = "%s:%s" % (IP, PORT)
-
-      yield proxy_info
+    for resp in response:
+      selector = etree.HTML(resp)
+      tr_list = selector.xpath("//table[1]//tr")
+      for tr in tr_list:
+        IP = tr.xpath(".//td[2]//text()")
+        PORT = tr.xpath(".//td[3]//text()")
+        if IP and PORT:
+          proxy_info = "%s:%s" % (IP[0], PORT[0])
+          print(proxy_info)
+          yield proxy_info
 
   #获取响应数据
   def get_response(self, start_url, page_count, stand_url=None):
     if stand_url:
-      print("Crawl URL Link %s" % url)
+      print("Crawl URL Link %s" % stand_url)
       # 头信息
       HEADERS = {
         "user-agent": random.choice(USER_AGENT_LIST),
       }
-      req = requests.get(url, headers=HEADERS)
-      return req.text
+      req = requests.get(stand_url, headers=HEADERS)
+      yield req.text
 
     #循环页数
     for i in range(1, page_count):
