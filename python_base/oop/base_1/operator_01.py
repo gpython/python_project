@@ -42,3 +42,20 @@ cart[3] = 100
 print(cart)
 cart[3] = 7000
 print(cart)
+
+
+
+class Fib:
+  def __init__(self):
+    self.lst = [0, 1, 1]
+
+  def __call__(self, x):
+    if x < len(self.lst):
+      return self.lst
+
+    for i in range(2, x):
+      self.lst.append(self.lst[i-1] + self.lst[i])
+    return self.lst
+
+a = Fib()
+print(a(60))
