@@ -16,6 +16,52 @@
 
 __dict__ 类或实例的属性 可写的字典 用户自定义的 类方法或属性在此
 
+
+#### 继承
+
+- __base__ 类的基类
+- __bases__ 类的基类元组
+- __mro__ 显示方法查找顺序 基类的元组
+- mro()   同上  int.mro()
+- __subclasses__() 类的子类列表  int.__subclasses__() 
+
+
+- 属性查找顺序
+    - 实例.__dict__ => 类.__dict__ => 有继承 父类.__dict__
+- super().__init__(params)
+- 父类.__init__(self, params)
+- super(当前类, self).__init__(params)  #不推荐
+- 作为一个好习惯 如果父类定义了__init__方法 就该在子类的__init__中调用
+- 自己的私有属性 就该自己的方法读取和修改 不要借助其他类的方法 即使是父类或者派生类的方法
+- 父类的 祖先类的 继承后都是自己的 除了私有的
+
+```python
+def printable(cls):
+  def _print(self):
+    return self.content
+  cls.print = _print
+  return cls
+
+def printable(cls):
+  cls.print = lambda self: self.content
+  cls.name = 'gppgle'
+  return cls
+
+
+@printable
+class Printable:      #Printable = printable(Printable)
+  def __init__(self, content):
+    self.content = content
+
+p = Printable('abc')
+print(p.print())
+print(p.__dict__)
+print(Printable.__dict__)
+```
+#### Mixin
+
+
+
 foo() 等价于 foo.__call__()
 函数即对象 对象foo加上() 就是调用对象的__call__()方法
 
