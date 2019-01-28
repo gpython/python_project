@@ -60,6 +60,29 @@ print(Printable.__dict__)
 ```
 #### Mixin
 
+- __getitem__(self, i) 列表索引值 获取 list[i]
+
+
+
+#### hash
+- __hash__ 方法只是返回一个hash值作为set的key 但是去重 还需要__eq__来判断2个对象是否相等
+- hash值相等 只是hash冲突 不能说明两个对象是相等的
+- 一般来说 提供__hash__方法是为了作为set或者dict的key的 去重的同时提供__eq__方法
+- 可hash对象必须提供__hash__方法 没有提供的话 isinstance(p1, collections.Hashable)一定为False
+- 去重提供__eq__方法
+
+
+__len__ 内建函数len()返回对象的长度 bool()函数调用的时候 如果有__bool__()方法 则会看__len__()方法是否存在存在返回非0为真
+
+__iter__ 迭代容器时 调用 返回一个新的迭代器对象
+
+__contains__ in成员对象符 没有实现 就调用__iter__方法遍历 
+
+__getitem__ 实现self[key]访问 序列对象 key接受整数为索引 或者切片 对于set和dict key为hashable key不存在引发keyerror异常
+
+__setitem__ 和__getitem__ 的访问类似 是设置值的方法
+
+__missing__ 字典使用__getitem__()调用时 key不存在执行此方法
 
 
 foo() 等价于 foo.__call__()
