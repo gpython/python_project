@@ -93,19 +93,21 @@ foo() 等价于 foo.__call__()
 
 反射 自省
 
-getattr(object, name[, default]) 通过name返回object的属性值 当属性不存在 将使用default返回 如果没有default 则抛出AttributeError name必须为字符串
+当设置 对象属性的时候 __setattr__ 一定先被触发调用 但是是否将属性放到__dict__中 非程序所控制 自己控制的 增加
 
-setattr(object, name, value) object的属性存在 则覆盖 不存在 则新增
+__setattr__ 可以拦截对实例属性的增加 修改操作 如果要设置生效 需要自己操作实例的__dict__ 此时 查找相应属性时就从__dict__中获取 不再从__getattr__中查找
 
-hasattr(object, name) 判断对象是否有这个名字的属性 name必须为字符串
+__getattr__ 一个类属性会按照继承关系查找 对象属性查找 
 
-__getattr__ 当通过搜索实例 实例的类 及 祖先类查找不到属性 就会调用此方法
- 
-__setattr__ 通过访问实例属性 进行增加 修改都要调用它
+instance.dict -> instance.__class__.dict->继承到祖先类的object的dict -> 调用getattr() __getattr__ -> 若没有 异常
 
-__delattr__ 当通过实例来删除属性时调用此方法
-
-__getattribute__ 实例所有属性调用都从这个方法开始
+- getattr(object, name[, default]) 通过name返回object的属性值 当属性不存在 将使用default返回 如果没有default 则抛出AttributeError name必须为字符串
+- setattr(object, name, value) object的属性存在 则覆盖 不存在 则新增
+- hasattr(object, name) 判断对象是否有这个名字的属性 name必须为字符串
+- __getattr__ 当通过搜索实例 实例的类 及 祖先类查找不到属性 就会调用此方法
+- __setattr__ 通过访问实例属性 进行增加 修改都要调用它
+- __delattr__ 当通过实例来删除属性时调用此方法
+- __getattribute__ 实例所有属性调用都从这个方法开始
 
 
 实例的所有属性访问 第一个都会调用__getattribute__方法 它阻止了属性的查找 该方法返回(计算后的)值 或者抛出一个AttributeError异常
