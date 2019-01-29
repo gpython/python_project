@@ -101,6 +101,19 @@ __getattr__ 一个类属性会按照继承关系查找 对象属性查找
 
 instance.dict -> instance.__class__.dict->继承到祖先类的object的dict -> 调用getattr() __getattr__ -> 若没有 异常
 
+
+__getattribute__ > __dict__ > __getattr__ 属性查找 优先级顺序 (类中方法查找优先级顺序)
+
+类或对象属性查找时 __getattribute__ 先被执行  优先于__dict__之前执行
+
+__getattr__ 先查找__dict__ 然后在执行__getattr__
+
+实例的所有的属性访问 第一个都会调用__getattribute__方法 它阻止了属性的查找 该方法返回 计算后的值 或者抛出AttributeError异常
+
+他的return值将作为属性查找的结果 如果抛出AttributeError异常 则会直接调用__getattr__方法 因为表示属性没有找到
+
+
+
 - getattr(object, name[, default]) 通过name返回object的属性值 当属性不存在 将使用default返回 如果没有default 则抛出AttributeError name必须为字符串
 - setattr(object, name, value) object的属性存在 则覆盖 不存在 则新增
 - hasattr(object, name) 判断对象是否有这个名字的属性 name必须为字符串
@@ -116,3 +129,31 @@ __getattribute__方法中为了避免在该方法中无限的递归 它的实现
 
 
 实例调用__getattribute__() -> instance.__dict__ -> instance.__class__.__dict__ -> 继承的祖先类(知道object)的__dict__ -> 调用__getattr__()
+
+### 描述器
+- __get__
+- __set__
+- __delete__
+- object.__get__(self, instance, owner)
+- object.__set__(self, instance, value)
+- object.__delete__(self, instance)
+- self指代当前实例 调用者
+- instance 是owner的实例
+- owner是属性的所属的类
+
+
+- python中 一个类实现了__get__ __set__ __delete__三个方法中的任何一个方法 就是描述器
+- 如果仅实现了__get__ 就是非数据描述符
+- 同时实现了__get__ __set__ 就是数据描述符
+- 如果一个类的类属性设置为描述器 那么他就是被称为owner属主
+- 描述器 对于类属性 有意义
+- 调用机制 必须要有属主 owner类
+- 调用机制 必须把自己的实例 作为另一个类的 类属性 才可以 作为另一个类的 实例属性 self属性 是不可行的
+- A类为 描述器  A的实例x作为B类的类属性
+- 
+- 如果仅实现了__get__ 就是          非数据描述器
+- 同时实现了__get__ __set__ 就是   数据描述器
+
+- 实例的__dict__优先于非数据描述器
+- 数据描述器 优先于实例的__dict__
+
