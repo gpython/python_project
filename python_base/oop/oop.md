@@ -157,3 +157,29 @@ __getattribute__方法中为了避免在该方法中无限的递归 它的实现
 - 实例的__dict__优先于非数据描述器
 - 数据描述器 优先于实例的__dict__
 
+
+mod = __import__("moduleName")
+mod = importlib.import_module(m)
+getattr(mod, "ClassName")().funcName()
+
+内建函数 __import__()
+
+import 语句本质上就是调用__import__这个函数 但不鼓励直接使用 建议使用importlib.import_module()
+ 
+sys = __import__("sys") 等价于 import sys
+
+```python
+import importlib
+
+def plugin_load(plugin_name:str, sep=":"):
+  m,_,c = plugin_name.partition(sep)
+  mod = importlib.import_module(m)
+  cls = getattr(mod, c)
+  return cls()
+
+if __name__ == '__main__':
+  a = plugin_load("test:A")
+
+```
+
+
