@@ -166,7 +166,7 @@ getattr(mod, "ClassName")().funcName()
 
 import 语句本质上就是调用__import__这个函数 但不鼓励直接使用 建议使用importlib.import_module()
  
-sys = __import__("sys") 等价于 import sys
+sys = __import__("sys") 等价于 import sys 
 
 ```python
 import importlib
