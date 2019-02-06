@@ -24,11 +24,15 @@ class TypeAsset:
     for name, params in params.items():
       print(name, params.annotation)
       if params.annotation != params.empty:
+        #Person.name = Typed(str)
+        #Person.age = Type(int)
         setattr(self.cls, name, Typed(params.annotation))
     return self.cls
 
 @TypeAsset
 class Person:   #Person = TypeAsset(Person)
+  #name = Typed(str)
+  #age = Typed(int)
 
   def __init__(self, name:str, age:int):
     self.name = name

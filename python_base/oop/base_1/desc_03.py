@@ -6,7 +6,7 @@ class StaticMethod:
     self.fn = fn
 
   def __get__(self, instance, owner):
-    print(self, instance, owner)
+    print("StaticMethod: ", self, instance, owner)
     return self.fn
 
 
@@ -15,12 +15,15 @@ class ClassMethod:
     self.fn = fn
 
   def __get__(self, instance, cls):
-    print(self, instance, cls)
+    print("ClassMethod: ", self, instance, cls)
     # return self.fn(cls) None
     return partial(self.fn, cls)
 
-class A:
+class A(object):
   #以下相当于类实例
+
+  def __init__(self):
+    pass
 
   @StaticMethod
   def foo():    #foo = StaticMethod(foo)
@@ -34,5 +37,6 @@ class A:
 # f()
 # print(f())
 
-f = A.bar
-f()
+# f = A.bar
+# f()
+A.bar()
