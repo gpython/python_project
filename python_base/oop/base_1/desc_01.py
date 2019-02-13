@@ -29,11 +29,11 @@ class B:
 
   def __init__(self):
     print("B.init")
-    # self.x = 100
-    self.x = A()
+    self.x = 100
+    # self.x = A()
 
 
 print(B.x)
 print("*"*60)
 b = B()
-print(b.x.a)
+print(b.x)

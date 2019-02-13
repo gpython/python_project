@@ -41,6 +41,9 @@ class B:
 # print(b.x)
 # print()
 b = B()
+print("*"*60)
+print(b.x)
+print("*"*60)
 
 b.x = 1000
 print(b.x)
