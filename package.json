@@ -1,0 +1,26 @@
+{
+  "name": "python_project",
+  "version": "1.0.0",
+  "description": "\"# python_project\"",
+  "main": "index.js",
+  "scripts": {
+    "build": "babel src -d lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gpython/python_project.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gpython/python_project/issues"
+  },
+  "homepage": "https://github.com/gpython/python_project#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^5.14.1",
+    "eslint-plugin-react": "^7.12.4"
+  }
+}
