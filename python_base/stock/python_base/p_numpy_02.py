@@ -1,3 +1,5 @@
+# from functools import reduce
+
 import scipy.stats as scs
 import  numpy as np
 import matplotlib.pyplot as plt
@@ -69,6 +71,7 @@ def t2():
   
 if __name__ == "__main__":
   t2()
+  
 
 
 
