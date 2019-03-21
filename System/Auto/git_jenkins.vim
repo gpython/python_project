@@ -402,15 +402,32 @@ scp target/${project_name}-$release.jar ${host}:/data/wwwroot/
 ssh root@${host} "java -jar /data/wwwroot/${project_name}-$release.jar"
 
 ##################
+####Maven环境搭建
 
 wget http://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz
 tar zxvf apache-maven-3.3.9-bin.tar.gz -C /usr/local/
 vim /etc/profile
 # maven所在的目录
-export M2_HOME=/usr/local/apache-maven-3.3.9
 # maven bin所在的目录
-export M2=$M2_HOME/bin
 # 将maven bin加到PATH变量中
+
+export M2_HOME=/usr/local/apache-maven-3.3.9
+export M2=$M2_HOME/bin
 export PATH=$M2:$PATH
-# 配置JAVA_HOME所在的目录，注意这个目录下应该有bin文件夹，bin下应该有java等命令
-export JAVA_HOME=/usr/lib/jvm/jre-1.7.0
+
+##配置JAVA_HOME所在的目录，注意这个目录下应该有bin文件夹，bin下应该有java等命令
+##export JAVA_HOME=/usr/lib/jvm/jre-1.7.0
+
+mvn -version
+
+#jenkins中 构建 执行shell
+mvn -v
+mvn clean compile
+
+
+
+##########################################################
+
+####jenkins 添加节点
+#首先在需要增加节点的机器上安装 java 环境
+系统管理 -> 管理节点 -> 新建节点
