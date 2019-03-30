@@ -1,35 +1,104 @@
+#时间同步
+
+
 vim /etc/yum.conf
 proxy=http://192.168.10.1:9919
 
-在此连接寻找合适的源
-https://repo.saltstack.com/yum/redhat/
+#在此连接寻找合适的源
+#https://repo.saltstack.com/yum/redhat/
 yum install https://repo.saltstack.com/yum/redhat/salt-repo-2016.3-2.el7.noarch.rpm
 
 yum install salt-master
 yum install salt-minion
 
-注意 客户端的主机名要唯一 变动主机名需要清除/etc/salt/minion_id文件内容
 
-日志文件 /var/log/salt/master /var/log/salt/minion
+#启动master
+systemctl start satl-master
 
-salt-minion
+#/etc/salt目录 pki/master目录新增文件如下
+├── pki
+│   ├── master
+│   │   ├── master.pem
+│   │   ├── master.pub
+│   │   ├── minions         #接受后 minions公钥存放于此
+│   │   ├── minions_autosign
+│   │   ├── minions_denied
+│   │   ├── minions_pre     #预接收 minion端 公钥 salt-key -A 全部接受后 转移到minions 目录
+│   │   │   ├── 10-10-10-50
+│   │   │   ├── 10-10-10-51
+│   │   │   ├── 10-10-10-52
+│   │   │   ├── 10-10-10-53
+│   │   │   ├── 10-10-10-54
+│   │   │   └── 10-10-10-55
+│   │   └── minions_rejected
+
+
+客户端的主机名要唯一
+变动主机名需要清除 /etc/salt/minion_id 文件内容
+日志文件
+  /var/log/salt/master
+  /var/log/salt/minion
+
+#修改minion配置文件 添加master主机地址 salt-minion
 vim /etc/salt/minion
   master: 192.168.1.70
 
-注意 客户端   /etc/salt/minion_id文件
+#启动minion
+systemctl start salt-minion
+
+#/etc/salt目录
+  生成minion_id文件 此文件内为 此minion机器的主机名
+  pki/minion 目录生成 minion主机的密钥对
+
+
+#注意 minion 客户端
+/etc/salt/minion_id文件 中保存着 minion 机器的 主机名
+
+#master 机器
 master识别minion时 pki文件里需要用到此minion_id文件里的标识
-master pki文件夹下minion_pre里文件名对应minion_id文件里的标识
-minion_pre文件里存储客户端的公钥
+
+master pki/master/minions_pre/以minion_id(默认即minion主机名)作为文件名
+minions_pre/minion_id 文件里存储客户端的公钥  通过minion_id 命名公钥文件
 
 master 端操作
 远程执行
   salt-key #列出所有类型的key
   salt-key -a 接受某个主机 或通配符接受一类主机
   salt-key -A 接受所有主机
-  此过程为master 和minion交换公钥过程
+  此时 双向交换公钥
+  master机器 将minion公钥由minions_pre目录 转移到 minions目录
+  minion机器 在minion 目录中添加 master机器的公钥
+├── pki
+│   ├── master
+│   │   ├── master.pem
+│   │   ├── master.pub
+│   │   ├── minions         ################
+│   │   │   ├── 10-10-10-50
+│   │   │   ├── 10-10-10-51
+│   │   │   ├── 10-10-10-52
+│   │   │   ├── 10-10-10-53
+│   │   │   ├── 10-10-10-54
+│   │   │   └── 10-10-10-55
+│   │   ├── minions_autosign
+│   │   ├── minions_denied
+│   │   ├── minions_pre     ##################
+│   │   └── minions_rejected
+│   └── minion
+│       ├── minion_master.pub   ###<----
+│       ├── minion.pem
+│       └── minion.pub
 
-  salt '*' test.ping
+#命令行 执行命令
+  salt '*' test.ping为
   salt '*' cmd.run 'w'
+
+#工作原理 消息队列 zeromq
+  master监听 4505 4506 端口
+  4505为salt的消息发布系统，4506为salt客户端与服务端通信的端口
+  salt客户端程序不监听端口，客户端启动后，会主动连接master端注册 然后一直保持该TCP连接
+  master通过这条TCP连接对客户端控制，如果连接断开，master对客户端就无能为力了
+  客户端若检查到断开后会定期的一直连接master端的。
+
 
 state状态管理 yaml格式 sls格式结尾
   缩进 2个空格 不能使用tab
@@ -37,18 +106,23 @@ state状态管理 yaml格式 sls格式结尾
   短横线 - list1
         - list2
 
+#创建必要目录
+mkdir /srv/salt/{base,dev,test,prod} -p
 
-salt Master配置文件
-/etc/salt/master
+#salt Master配置文件
+vim /etc/salt/master
 
-file_roots:         #状态文件目录
+file_roots:
   base:
-    - /srv/salt
+    - /srv/salt/base
+  dev:
+    - /srv/salt/dev
+  test:
+    - /srv/salt/test
+  prod:
+    - /srv/salt/prod
 
 state_top: top.sls  #入口文件
-
-
-
 
 
 minion机器state被下发后存放在
@@ -58,14 +132,22 @@ apache.sls
 
 apache-install:         #自定义名字
   pkg.installed:        #模块.方法 软件安装
-    - names:            #相当于字典 里有个列表 要安装软件的列表
+    - names:            #相当于字 典 里有个列表 要安装软件的列表
       - httpd
       - httpd-devel
 
-apache-service:         # 自定义名字
-  service.running:      # 模块.名字 服务运行
-    - name: httpd       # 服务名字
+apache-service:         # ID声明 高级状态 ID必须唯一 全局唯一 自定义名字
+  service.running:      # 状态声明  模块.名字 服务运行
+    - name: httpd       # 选项声明  服务名字
     - enable: Tre       # 服务开机启动
+
+top.sls
+
+base:
+  '10-10-10-53':
+    - web.apache
+  '10-10-10-54':
+    - web.apache
 
 
 
@@ -80,19 +162,58 @@ lsof -i:4506
 4505 发布订阅  发消息
 4506 接受返回的数据
 
+##jinja
+告诉file模块要使用jinja模板
+- template: jinja
+
+列出参数列表
+- defaults:
+  - PORT: 88
+
+模板引用
+  {{ PORT }}
+
+模板支持的类型 jinja参数 salt命令 grains静态数据 pillar 进行赋值
+nginx.conf
+#            grains静态取值          jinja参数
+Listen {{ grains['fqdn_ip4'][0] }}:{{ PORT }}
+
+#salt 远程执行模块 数值获取 模块.方法
+#MAC_Adress {{ salt['network.hw_addr']('eth0') }}
+#PWD: {{ salt['cmd.run']('pwd') }}
+#Current Time: {{ salt['cmd.run']('date +"%F %T"') }}
+
+
+grains静态取值
+salt '10-10-10-53' grains.item fqdn_ip4
+
+salt远程执行模块 数值获取 模块.方法
+salt '10-10-10-53' network.hw_addr eth0
+salt '10-10-10-53' cmd.run pwd
+salt '10-10-10-53' cmd.run 'date +"%F %T"'
+
+
+
 数据系统
 
 Grains 静态数据
-当Minion启动的时候收集的Minion的本地相关数据
-操作系统 内核版本 CPU 内存 硬盘 设备型号 序列号等
-资产管理
-用于目标选择   salt -G 'os:CentOS' cmd.run
-配置管理使用
+其主要用于记录Minion的一些静态信息，如比：CPU、内存、磁盘、网络等
+grains信息是每次客户端启动后自动上报给master的
+一旦这些静态信息发生改变需要重启minion 或者 重新同步下 grains
+除此之外我们还可以自定义Grains的一些信息 自定义的方法有三种
+  1、通过Minion配置文件定义
+  2、通过Grains相关模块定义
+  3、通过python脚本定义
 
-salt 'vm-1-81' grains.items       #输出机器配置信息
-salt 'vm-1-81' grains.items os    #输出机器某一项信息
+salt '*' grains.items       #输出机器配置信息
+salt '10-10-10-53' grains.item os     #输出机器某一项信息
 salt -G 'os:CentOS' test.ping     #-G 目标选择执行
 salt -G 'os:CentOS' cmd.run 'w'
+salt '*' grains.item os osrelease oscodename
+salt '*' grains.ls
+
+
+
 
 自定义grains 在minion机器上 配置文件内 自定义角色
 grains:
@@ -147,25 +268,55 @@ pillar_roots:
   base:
     - /srv/pillar
 
-mkdir /srv/pillar/web
+/srv/pillar
+.
+├── global.sls
+├── secure
+│   ├── 51pd.sls
+│  
+├── top.sls
+└── web
+    └── soft.sls
 
-vim apache.sls
-{% if grains['os'] == 'CentOS' %}
-apache: httpd
-{% elif grains['os'] == 'Debian' %}
-apache: apache2
-{% endif %}
-
-Pillar需要在top.sls中指定哪些agent可以使用此变量
-  web 为目录
-  apache 为文件 apache.sls
-vim /srv/pillar/top.sls
+#####vim top.sls
 base:
-  'vm-1-81':
-    - web.apache
+  '*':
+    - global
 
+  "10-10-10-51":
+    - web.nginx
+    - secure.51pd
+
+#####vim global.sls
+user:
+  zabbix: 1000
+  nginx: 10001
+  www: 1002
+
+#####vim soft.sls
+pkg:
+  {% if grains['os'] == "CentOS" %}
+  nginx: "This is CentOS Nginx"
+  apache: httpd
+  vim: vim-enhanced
+  {% elif grains['os'] == "Debian" %}
+  nginx: "This is Debian Nginx"
+  apache: apache
+  vim: vim
+  {% endif %}
+  port: 8080
+  common: "Something COmmon"
+
+#####vim 51pd.sls
+pwd:
+  key: "1.1HBHr+NQuZA="
+
+
+
+#pillar 变量修改 需要下发参数  使其生效
+salt '*' saltutil.sync_all
 salt '*' saltutil.refresh_pillar
-salt '*' pillar.items apache
+salt '*' pillar.items
 salt -I 'apache:httpd' cmd.run 'w'    #-I 用pillar的key:value来匹配
 
         类型      数据收集方式      应用场景                        定义位置
@@ -356,27 +507,41 @@ apache-service:
     - watch:                #监控当apache配置文件发生改变时候 执行reload 若reload没有执行restart
       - file: apache-config
 
-我依赖谁    require
+
+##########处理状态间关系
+require 我依赖谁
   Apache 依赖lamp-pkg 这个模块 并且依赖apapche-config
 
-我被谁依赖  require_in
+require_in 我被谁依赖
 
-我监控谁    watch
+watch 我监控谁  我关注某个状态
+  即是require  也是监控
   如果监控文件修改 需要做出相应动作
   如果apache-config这个id的状态发生改变就reload
   如果没有reload:True 那么就restart
 
-
-我被谁监控   watch_inc
+watch_in  我被某个状态关注
 
 我引用谁
 我扩展谁
 
-unless  如果后边这条命令返回为真 则不执行
+unless  如果后边这条命令返回为False 执行
 unless test -L /usr/local/haproxy
 如果 haproxy此链接存在则 不执行 cmd.run 中命令
 否则每次执行state.sls 都会执行cmd.run下命令
 
+http-service:
+  service.running
+    - name: nginx
+    - enable: True
+    - reload: True
+    - require:
+      - pkg: xxxx
+    - watch:
+      - file: nginx-config
+
+如果http-service这个ID 状态发生变化 就reload
+如果http-service这个ID 没有加reload: True 这个条件 那么状态发生改变 就restart
 
 
 include:
@@ -385,8 +550,26 @@ include:
  lamp  为top files里定义的文件夹 如/srv/salt/ 下lamp文件夹
  pkg   为lamp文件夹下pkg.sls文件
 
-salt 'vm-1-81' state.sls lamp.init
-  执行lamp文件夹下的init.sls文件
+/srv/salt/lamp/
+  |--config.sls
+  |--pkg.sls
+  |--servie.sls
+  |--files
+  |--init.sls
+
+#安装
+#配置
+#启动
+
+vim init.sls
+include:
+  - lamp.pkg
+  - lamp.config
+  - lamp.service
+
+#执行  节点        状态      lamp/init.sls
+salt 'node-1-1' state.sls lamp.init
+
 
 
 JinJa2模板
@@ -424,6 +607,13 @@ salt '*' network.hw_addr eth0
 #pillar /srv/pillar
 {{ pillar['apache'] }}
 
+
+所有执行的任务都有一个jid
+#列出现在所有在运行的job
+salt '*' saltutil.running
+#杀死运行的jid
+Salt '*' saltuitl.kill_job jid
+#master 执行salt 先分发到minion端 minion 再在本地执行
 
 
 
