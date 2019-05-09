@@ -291,6 +291,83 @@ cmake  -DCMAKE_INSTALL_PREFIX=/usr/local/mysql \
 
 
 
+##################################
+MyISAM 会把索引 缓存到 内存中 数据有OS 缓存
+Innodb 索引和数据都 缓存在内存中 提高数据库运行效率
+
+系统表空间 和 独立表空间选择
+Innodb_file_per_table
+比较
+  系统表空间无法简单收缩文件大小
+  独立表空间可以通过optimize table命令收缩系统文件
+
+  系统表空间会产生IO瓶颈
+  独立表空间可以同时向多个文件刷新数据
+
+show engine innodb status 上次执行到本次执行间隔的状态值
+
+内存配置相关参数
+  确定MySQL的 每个连接 使用的内存
+  以下四个参数是 为每个链接分配的内存大小 与连接数成倍数 的消耗内存
+
+  以下参数 内存使用总和 = 每个线程所需要内存×连接数
+
+  sort_buffer_size
+   每个连接排序缓冲区的大小
+   有查询排序操作时为每个连接分配缓冲区 直接为每个连接 分配此参数指定 的内存大小
+
+  join_buffer_size
+   为每个关联 分配 此参数指定 的内存大小
+
+  read_buffer_size 4k倍数
+   为myisam表全表扫描时分配读缓冲区 所需内存大小
+
+  read_rnd_buffer_size
+   索引缓冲区 分配 所需内存大小
+
+为缓存池分配内存
+  Innodb_buffer_pool_size
+  总内存 - 每个线程所需要内存×连接数 -系统保留内存
+
+  key_buffer_size (myisam)
+
+
+Innodb I/O相关配置
+  Innodb_log_file_size
+  Innodb_log_files_in_group
+  事务日志总大小
+  Inndob_log_file_size*Innodb_log_files_in_group
+
+  事务日志缓冲区
+  Innodb_log_buffer_size
+  事务 先提交到事务日志缓冲区 然后在 刷新到磁盘上的事务日志文件中
+
+  Innodb_flush_log_at_trx_commit
+  0 每秒进行一次log写入cache 并flush log到磁盘
+  1 默认 在每次事务提交执行log写入cache 并flush log到磁盘
+  2 建议 每次事务提交 执行log数据写入到cache 每秒执行一次flush log到磁盘
+
+  Innodb_flush_method=O_DIRECT
+
+  Innodb_file_per_table = 1
+  Innodb_doublewrite = 1
+   避免不完整页 (16k) 写入 建议开启
+
+安全
+  max_allowed_packet
+  skip_name_resolve
+  sysdate_is_now
+  read_only
+  skip_slave_start
+
+
+
+
+
+
+
+
+
 
 
 

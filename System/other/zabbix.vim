@@ -71,6 +71,7 @@ zabbix监控 主动 被动模式
   zabbix_agent 配置zabbix_server IP 地址 Server定期来获取agent数据
   Server定期 轮询询问 每个agent 的所有item 的值
   10050端口是在被动模式下 需要server连接此端口
+  Monitoring->Latest data中获取与值的last check时间间隔不相同
 
 主动模式
   agent定期向Server发送 agent数据
@@ -81,6 +82,13 @@ zabbix监控 主动 被动模式
   默认模板的item监控type 为Zabbix agent 可以full clone 一个新模板 取名为Active
   选中所有item项目 Mass Update 全部更新type 为 Zabbix agent(active) 则此时新模板
   的大部分item的监控type 都是Active 主动监控类型了
+  Monitoring->Latest data中获取与值的last check时间间隔基本相同
+Trapper模式
+  主动或被动模式item自定义脚本执行时间长 则需要等待这个耗时时间
+  没有时间间隔选项
+  zabbix_sender -z zabbix_server_IP -s "Agent_host_name" -k parameters -o item_value
+  zabbix_sender -z 10.10.10.50 -s "10-10-10-53" -k db.connections -o 43
+
 
 
 
