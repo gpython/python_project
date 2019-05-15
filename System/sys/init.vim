@@ -31,6 +31,7 @@ done
 
 #############CentOS7#######################
 #CentOS7
+yum -y install epel-release
 yum update
 yum install net-tools vim tree unzip lsof sysstat iptraf ntop iftop htop iotop openssl openssl-devel gcc gcc-c++ autoconf libjpeg libjpeg-devel libpng libpng-devel freetype freetype-devel libxml2 libxml2-devel zlib zlib-devel glibc glibc-devel glib2 glib2-devel bzip2 bzip2-devel ncurses ncurses-devel curl curl-devel e2fsprogs e2fsprogs-devel krb5 krb5-devel libidn libidn-devel openssl openssl-devel openldap openldap-devel nss_ldap openldap-clients openldap-servers gd-devel libXpm-devel wget unzip pcre pcre-devel ntpdate
 
@@ -51,9 +52,13 @@ cat >> /etc/profile << EOF
 export EDITOR=vim
 PS1='[-\$?- \[\e[32m\]\u@\[\e[31m\]\h\[\e[33m\] \w\[\e[0m\]]\\$ '
 export MYSQL_PS1="\u@-DB-[\d]> "
-USER_IP=`who -u am i 2>/dev/null| awk '{print $NF}'|sed -e 's/[()]//g'`
-export HISTTIMEFORMAT="[%F %T][`whoami`][${USER_IP}] "
-export PROMPT_COMMAND='{ msg=$(history 1 | { read x y; echo $y; });logger "[euid=$(whoami)]":$(who am i):[`pwd`]"$msg"; }'
+USER_IP=\`who -u am i 2>/dev/null| awk '{print \$NF}'|sed -e 's/[()]//g'\`
+export HISTTIMEFORMAT="[%F %T][\`whoami\`][\${USER_IP}] "
+#export PROMPT_COMMAND='{ msg=\$(history 1 | { read x y; echo \$y; });logger "[euid=\$(whoami)]":\$(who am i):[\`pwd\`]"\$msg"; }'
+
+#USER_IP=`who -u am i 2>/dev/null| awk '{print $NF}'|sed -e 's/[()]//g'`
+#export HISTTIMEFORMAT="[%F %T][`whoami`][${USER_IP}] "
+#export PROMPT_COMMAND='{ msg=$(history 1 | { read x y; echo $y; });logger "[euid=$(whoami)]":$(who am i):[`pwd`]"$msg"; }'
 EOF
 
 
