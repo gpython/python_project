@@ -103,8 +103,10 @@ EOF
 
 
 #Ntpdate Setting
-/usr/sbin/ntpdate stdtime.gov.hk
-echo "00 * * * *  /usr/sbin/ntpdate stdtime.gov.hk" >> /var/spool/cron/root
+timedatectl set-timezone Asia/Shanghai
+#/usr/sbin/ntpdate stdtime.gov.hk
+/usr/sbin/ntpdate time1.aliyun.com
+echo "00 * * * *  /usr/sbin/ntpdate time1.aliyun.com" >> /var/spool/cron/root
 
 
 #System Kernel Parameters
