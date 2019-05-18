@@ -53,6 +53,8 @@ Neutron  为虚拟机提供网络资源
 
 时间同步
 
+关闭NetworkManager
+
 主机名确定好不许再修改
 
 
