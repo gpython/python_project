@@ -589,7 +589,6 @@ yum install openstack-nova-compute
 /etc/nova/nova.conf
 #只启用计算和元数据API
 [DEFAULT]
-
 enabled_apis = osapi_compute,metadata
 
 #配置 RabbitMQ 消息队列访问权限
