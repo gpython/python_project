@@ -87,7 +87,7 @@ systemctl start rabbitmq-server.service
 #添加 openstack 用户 配置密码openstack
 rabbitmqctl add_user openstack openstack
 
-#给``openstack``用户配置写和读权限
+#给 openstack 用户配置写和读权限
 rabbitmqctl set_permissions openstack ".*" ".*" ".*"
 
 #插件列表
@@ -170,9 +170,8 @@ systemctl enable memcached
 systemctl start memcached
 
 #编辑文件 /etc/keystone/keystone.conf 
-#在``[token]``部分，配置Fernet UUID令牌的提供者
+#配置Fernet UUID令牌的提供者
 [token]
-# ...
 provider = fernet
 driver = memcache
 
@@ -201,10 +200,11 @@ select * from role;
 select * from endpoint;
 
 #配置HTTP服务器
-编辑``/etc/httpd/conf/httpd.conf`` 文件，配置``ServerName`` 选项为控制节点
+/etc/httpd/conf/httpd.conf
+#配置 ServerName  选项为控制节点
 ServerName controller
 
-创建一个链接到``/usr/share/keystone/wsgi-keystone.conf``文件
+创建一个链接到 /usr/share/keystone/wsgi-keystone.conf 文件
 ln -s /usr/share/keystone/wsgi-keystone.conf /etc/httpd/conf.d/
 
 systemctl enable httpd.service
@@ -238,7 +238,7 @@ openstack project create --domain default \
 openstack project create --domain default \
   --description "Demo Project" demo
 
-#创建``demo`` 用户：
+#创建 demo 用户：
 openstack user create --domain default \
   --password-prompt demo
 
@@ -494,32 +494,26 @@ openstack endpoint create --region RegionOne placement admin http://10.10.10.10:
 
 
 #配置文件/etc/nova/nova.conf
-#在``[DEFAULT]``部分，只启用计算和元数据API
+# 只启用计算和元数据API
 [DEFAULT]
-# ...
 enabled_apis = osapi_compute,metadata
 
-#在``[api_database]``和``[database]``部分，配置数据库的连接
+#配置数据库的连接
 [api_database]
-# ...
 connection = mysql+pymysql://nova:nova@10.10.10.10/nova_api
 
 [database]
-# ...
 connection = mysql+pymysql://nova:nova@10.10.10.10/nova
 
-#在``[DEFAULT]``部分，配置``RabbitMQ``消息队列访问权限
+#配置``RabbitMQ``消息队列访问权限
 [DEFAULT]
-# ...
 transport_url = rabbit://openstack:openstack@10.10.10.10
 
-#在 [api] 和 [keystone_authtoken] 部分，配置认证服务访问
+#配置认证服务访问
 [api]
-# ...
 auth_strategy = keystone
 
 [keystone_authtoken]
-# ...
 auth_uri = http://10.10.10.10:5000
 auth_url = http://10.10.10.10:35357
 memcached_servers = 10.10.10.10:11211
@@ -530,32 +524,27 @@ project_name = service
 username = nova
 password = nova
 
-#在 ``[DEFAULT]``部分，启用网络服务支持
+#启用网络服务支持
 [DEFAULT]
-# ...
 use_neutron = True
 firewall_driver = nova.virt.firewall.NoopFirewallDriver
 
-#在``[vnc]``部分，配置VNC代理使用控制节点的管理接口IP地址
+#配置VNC代理使用控制节点的管理接口IP地址
 [vnc]
 enabled = true
-# ...
 vncserver_listen = 0.0.0.0
 vncserver_proxyclient_address = 10.10.10.10
 
 #在 [glance] 区域，配置镜像服务 API 的位置
 [glance]
-# ...
 api_servers = http://10.10.10.10:9292
 
-#在 [oslo_concurrency] 部分，配置锁路径：
+#配置锁路径：
 [oslo_concurrency]
-# ...
 lock_path = /var/lib/nova/tmp
 
-#In the [placement] section, configure the Placement API:
+#configure the Placement API:
 [placement]
-# ...
 os_region_name = RegionOne
 project_domain_name = Default
 project_name = service
@@ -597,24 +586,21 @@ nova service-list
 ################# node2 安装nova-compute ######################
 yum install openstack-nova-compute
 
-#编辑``/etc/nova/nova.conf``文件并完成下面的操作
-#在``[DEFAULT]``部分，只启用计算和元数据API
+/etc/nova/nova.conf
+#只启用计算和元数据API
 [DEFAULT]
-...
+
 enabled_apis = osapi_compute,metadata
 
-#在``[DEFAULT]``部分，配置``RabbitMQ``消息队列访问权限
+#配置 RabbitMQ 消息队列访问权限
 [DEFAULT]
-...
 transport_url = rabbit://openstack:openstack@10.10.10.10
 
-#在 [api] 和 [keystone_authtoken] 部分，配置认证服务访问
+#配置认证服务访问
 [api]
-# ...
 auth_strategy = keystone
 
 [keystone_authtoken]
-# ...
 auth_uri = http://10.10.10.10:5000
 auth_url = http://10.10.10.10:35357
 memcached_servers = 10.10.10.10:11211
@@ -625,34 +611,28 @@ project_name = service
 username = nova
 password = nova
 
-#在 ``[DEFAULT]``部分，启用网络服务支持
+#启用网络服务支持
 [DEFAULT]
-# ...
 use_neutron = True
 firewall_driver = nova.virt.firewall.NoopFirewallDriver
 
-在``[vnc]``部分，启用并配置远程控制台访问：
-
+#启用并配置远程控制台访问：
 [vnc]
-# ...
 enabled = True
 vncserver_listen = 0.0.0.0
 vncserver_proxyclient_address = 10.10.10.20
 novncproxy_base_url = http://10.10.10.10:6080/vnc_auto.html
 
-#在 [glance] 区域，配置镜像服务 API 的位置
+#配置镜像服务 API 的位置
 [glance]
-# ...
 api_servers = http://10.10.10.10:9292
 
-#在 [oslo_concurrency] 部分，配置锁路径：
+#配置锁路径：
 [oslo_concurrency]
-# ...
 lock_path = /var/lib/nova/tmp
 
-#In the [placement] section, configure the Placement API:
+#configure the Placement API:
 [placement]
-# ...
 os_region_name = RegionOne
 project_domain_name = Default
 project_name = service
@@ -666,9 +646,8 @@ password = placement
 #确定您的计算节点是否支持虚拟机的硬件加速
 egrep -c '(vmx|svm)' /proc/cpuinfo
 
-在 /etc/nova/nova.conf 文件的 [libvirt] 区域做出如下的编辑
+/etc/nova/nova.conf 
 [libvirt]
-# ...
 virt_type=kvm
 
 grep -Pv '^#|^$' /etc/nova/nova.conf
@@ -721,24 +700,20 @@ discover_hosts_in_cells_interval = 300
 # ...
 connection = mysql+pymysql://neutron:neutron@10.10.10.10/neutron
 
-#在``[DEFAULT]``部分，启用ML2插件并禁用其他插件
+#启用ML2插件并禁用其他插件
 [DEFAULT]
-# ...
 core_plugin = ml2
 service_plugins =
 
-#在``[DEFAULT]``部分，配置``RabbitMQ``消息队列访问权限
+#配置``RabbitMQ``消息队列访问权限
 [DEFAULT]
-# ...
 transport_url = rabbit://openstack:openstack@10.10.10.10
 
-#在 “[DEFAULT]” 和 “[keystone_authtoken]” 部分，配置认证服务访问
+#配置认证服务访问
 [DEFAULT]
-# ...
 auth_strategy = keystone
 
 [keystone_authtoken]
-# ...
 auth_uri = http://10.10.10.10:5000
 auth_url = http://10.10.10.10:35357
 memcached_servers = 10.10.10.10:11211
@@ -750,14 +725,12 @@ username = neutron
 password = neutron
 
 
-#在``[DEFAULT]``和``[nova]``部分，配置网络服务来通知计算节点的网络拓扑变化
+#配置网络服务来通知计算节点的网络拓扑变化
 [DEFAULT]
-# ...
 notify_nova_on_port_status_changes = True
 notify_nova_on_port_data_changes = True
 
 [nova]
-# ...
 auth_url = http://10.10.10.10:35357
 auth_type = password
 project_domain_name = default
@@ -767,16 +740,14 @@ project_name = service
 username = nova
 password = nova
 
-#在 [oslo_concurrency] 部分，配置锁路径：
+#配置锁路径：
 [oslo_concurrency]
-...
 lock_path = /var/lib/neutron/tmp
 
 
 #### 配置 Modular Layer 2 (ML2) 插件 ######
 ##ML2插件使用Linuxbridge机制来为实例创建layer－2虚拟网络基础设施
-#编辑``/etc/neutron/plugins/ml2/ml2_conf.ini``文件并完成以下操作
-#在``[ml2]``部分，
+/etc/neutron/plugins/ml2/ml2_conf.ini
 [ml2]
 #启用flat和VLAN网络
 type_drivers = flat,vlan
@@ -791,18 +762,18 @@ mechanism_drivers = linuxbridge
 extension_drivers = port_security
 
 
-#在``[ml2_type_flat]``部分，配置公共虚拟网络为flat网络：
+#配置公共虚拟网络为flat网络：
 [ml2_type_flat]
 flat_networks = public
 
-#在 ``[securitygroup]``部分，启用 ipset 增加安全组的方便性：
+#启用 ipset 增加安全组的方便性：
 [securitygroup]
 enable_ipset = True
 
 
 ## 配置Linuxbridge代理¶
 #Linuxbridge代理为实例建立layer－2虚拟网络并且处理安全组规则。
-#/etc/neutron/plugins/ml2/linuxbridge_agent.ini
+/etc/neutron/plugins/ml2/linuxbridge_agent.ini
 
 #将公共虚拟网络和公共物理网络接口对应起来
 #替换为底层的物理公共网络接口
@@ -833,14 +804,14 @@ enable_isolated_metadata = True
 
 
 #### 配置元数据代理 ######
-#/etc/neutron/metadata_agent.ini
+/etc/neutron/metadata_agent.ini
 #配置元数据主机以及共享密码：
 [DEFAULT]
 nova_metadata_ip = 10.10.10.10
 metadata_proxy_shared_secret = meta_secret
 
 ####配置计算服务来使用网络服务
-#/etc/nova/nova.conf
+/etc/nova/nova.conf
 #配置访问参数，启用元数据代理并设置密码：
 
 [neutron]
