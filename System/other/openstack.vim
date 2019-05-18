@@ -145,7 +145,7 @@ grant all on cinder.* to 'cinder'@'%' identified by 'cinder';
 
 
 ########### Keystone 用户权限认证管理##################
-#编辑文件 /etc/keystone/keystone.conf 并完成如下动作
+vim /etc/keystone/keystone.conf 
 [database]
 connection = mysql+pymysql://keystone:keystone@10.10.10.10/keystone
 
@@ -163,13 +163,13 @@ servers = 10.10.10.10:11211
 #安装memcached
 yum install memcached python-memcached -y
 
-#编辑/etc/sysconfig/memcached 更改监听端口
+vim /etc/sysconfig/memcached 
 OPTIONS="-l 0.0.0.0,::1"
 
 systemctl enable memcached
 systemctl start memcached
 
-#编辑文件 /etc/keystone/keystone.conf 
+vim /etc/keystone/keystone.conf 
 #配置Fernet UUID令牌的提供者
 [token]
 provider = fernet
@@ -233,7 +233,7 @@ openstack endpoint list
 openstack project create --domain default \
   --description "Service Project" service
 
-#常规（非管理）任务应该使用无特权的项目和用户。本指南创建 demo 项目和用户
+#常规（非管理）任务应该使用无特权的项目和用户。创建 demo 项目和用户
 #创建``demo`` 项目
 openstack project create --domain default \
   --description "Demo Project" demo
@@ -283,7 +283,7 @@ openstack service delete some_service_id
 #安装完成keystone 并启动 创建了相关用户和项目 验证keystone
 #验证刚才创建用户是否可用
 
-#撤销临时环境变量``OS_AUTH_URL``和``OS_PASSWORD``
+#撤销临时环境变量 OS_AUTH_URL 和 OS_PASSWORD 
 unset OS_AUTH_URL OS_PASSWORD
 
 #作为 admin 用户，请求认证令牌
@@ -394,7 +394,6 @@ flavor = keystone
 #继续配置glance-api
 /etc/glance/glance-api.conf
 [glance_store]
-# ...
 stores = file,http
 default_store = file
 filesystem_store_datadir = /var/lib/glance/images/
@@ -505,7 +504,7 @@ connection = mysql+pymysql://nova:nova@10.10.10.10/nova_api
 [database]
 connection = mysql+pymysql://nova:nova@10.10.10.10/nova
 
-#配置``RabbitMQ``消息队列访问权限
+#配置 RabbitMQ 消息队列访问权限
 [DEFAULT]
 transport_url = rabbit://openstack:openstack@10.10.10.10
 
