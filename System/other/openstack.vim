@@ -795,7 +795,7 @@ firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver
 #配置Linuxbridge驱动接口，DHCP驱动并启用隔离元数据
 #这样在公共网络上的实例就可以通过网络来访问元数据
 [DEFAULT]
-interface_driver = neutron.agent.linux.interface.BridgeInterfaceDriver
+interface_driver = linuxbridge
 dhcp_driver = neutron.agent.linux.dhcp.Dnsmasq
 enable_isolated_metadata = True
 
@@ -934,11 +934,62 @@ neutron agent-list
 
 
 ####################### Controller #######
-#创建提供者网络
+#### 创建提供者网络 ####
+
 . admin-openstack
 
+#创建网络public
 openstack network create  --share --external \
   --provider-physical-network public \
   --provider-network-type flat public
 
+#在网络上创建一个子网
+openstack subnet create --network public \
+  --allocation-pool start=192.168.1.10,end=192.168.1.40 \
+  --dns-nameserver 8.8.4.4 --gateway 192.168.1.1 \
+  --subnet-range 192.168.1.0/24 public
+
 neutron net-list
+neutron subnet-list
+
+### 创建实例
+# 创建m1.nano类型
+openstack flavor create --id 0 --vcpus 1 --ram 64 --disk 1 m1.nano
+
+#　生成一个键值对
+. demo-openstack
+ssh-keygen -q -N ""
+openstack keypair create --public-key ~/.ssh/id_rsa.pub mykey
+
+openstack keypair list
+
+#增加安全组规则
+
+#至少允许ICMP (ping) 和安全shell(SSH)规则
+openstack security group rule create --proto icmp default
+openstack security group rule create --proto tcp --dst-port 22 default
+
+##启动一个实例
+. demo-openstack
+
+#一个实例指定了虚拟机资源的大致分配，包括处理器、内存和存储 列出可用类型
+openstack flavor list
+
+openstack image list
+
+openstack network list
+
+openstack security group list
+
+##启动云主机
+#使用　public 公有网络的ID替换 PUBLIC_NET_ID net-id
+
+openstack server create --flavor m1.nano --image cirros \
+  --nic net-id=ff04db04-6036-40b2-a167-07cc5d4038df --security-group default \
+  --key-name mykey public-instance
+
+#检查实例的状态
+openstack server list
+
+
+
