@@ -1010,6 +1010,46 @@ ip netns exec qdhcp-a4c48d9c-c556-486d-aca3-6c2ce69333a7 ps aux| grep 9069
 
 
 
+##################################################################################
+#####
+Build of instance 5ea8c935-ee07-4788-823f-10e2b003ca89 aborted: Failed to allocate the network(s), not rescheduling.]
+
+在nova的计算节点修改：
+/etc/nova/nova.conf
+#Fail instance boot if vif plugging fails  
+vif_plugging_is_fatal = False  
+  
+#Number of seconds to wait for neutron vif  
+#plugging events to arrive before continuing or failing  
+#(see vif_plugging_is_fatal). If this is set to zero and  
+#vif_plugging_is_fatal is False, events should not be expected to arrive at all
+vif_plugging_timeout = 0  
+
+######
+neutron linux bridge log shows ERROR "RTNETLINK answers: Permission denied"
+控制节点添加
+/etc/sysctl.conf
+net.ipv6.conf.all.disable_ipv6=1
+
+sysctl -p
+
+######
+Failed to get shared "write" lock\nIs another process using the image?\n'
+qemu-img 版本问题
+因为nova管理进程在对已建虚机的硬盘文件进行定期的查看时命令qemu-img info使用没加参数-U导致，
+经测试以下命令就可以返回正确结果
+qemu-img info -U /var/lib/nova/instances/13cf63f7-bab8-4a31-990d-046120802e1f/disk
+
+下面命令则返回
+qemu-img info /var/lib/nova/instances/13cf63f7-bab8-4a31-990d-046120802e1f/disk
+Failed to get shared "write" lock
+Is another process using the image?
+
+根据报错信息行数 直接在代码中添加 -U 参数 如下
+vim /usr/lib/python2.7/site-packages/nova/virt/images.py
+O版 60行 元组添加 '-U' 即可
+cmd = ('env', 'LC_ALL=C', 'LANG=C', 'qemu-img', 'info', '-U', path)
+
 
 
 
