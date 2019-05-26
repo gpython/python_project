@@ -993,3 +993,28 @@ openstack server list
 
 
 
+
+######controller
+meta-data
+#计算节点虚拟机启动时候 查看其输出日志会发现其 curl下载内容到虚拟机中
+虚拟机启动时候指定一些自定义的东西 可以用此方式
+ip netns li
+#ip
+ip netns exec qdhcp-a4c48d9c-c556-486d-aca3-6c2ce69333a7 ip add ls
+#端口
+ip netns exec qdhcp-a4c48d9c-c556-486d-aca3-6c2ce69333a7 netstat -natp
+#pid进程 neutron-ns-metadata-proxy
+ip netns exec qdhcp-a4c48d9c-c556-486d-aca3-6c2ce69333a7 ps aux| grep 9069
+
+
+
+
+
+
+
+
+
+
+
+
+
