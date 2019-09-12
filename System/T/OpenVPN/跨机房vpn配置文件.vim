@@ -58,7 +58,7 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 
 
 机房B 
-外网地址 eth1 106.75.147.42 
+外网地址 eth1 42
 内网网段 eth0 10.13.0.0
 client.ovpn 
 #########################################
@@ -68,14 +68,14 @@ proto tcp
 #script-security 3 system
 #auth-user-pass-verify /etc/openvpn/checkpsw.sh via-env
 #auth-user-pass psw-file
-remote 123.59.147.109 9411 #OpenVPN服务器的公网IP
+remote 109 94 #OpenVPN服务器的公网IP
 resolv-retry infinite
 nobind
 persist-key
 persist-tun
 ca ca.crt
-cert IDCGZ@juzhongjoy.com.crt
-key  IDCGZ@juzhongjoy.com.key
+cert IDCGZ@ju.com.crt
+key  IDCGZ@ju.com.key
 comp-lzo
 verb 3
 askpass passwd.txt
