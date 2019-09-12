@@ -1,0 +1,18 @@
+$TTL 86400
+@             IN        SOA       ns1.g.com.  root.g.com (
+                        0
+                        1H
+                        10M
+                        7D
+                        1D
+)
+
+                IN        NS      ns1.g.com.
+                IN        NS      ns2.g.com.
+10.10           IN        PTR     ns1.g.com.
+10.20           IN        PTR     ns2.g.com.
+
+0.100           IN        PTR     www.g.com.
+1.100           IN        PTR     ftp.g.com.
+2.100           IN        PTR     mail.g.com.
+3.100           IN        PTR     v.g.com.

@@ -1,0 +1,32 @@
+$TTL 86400
+$ORIGIN g.com.
+@         IN        SOA      ns1.g.com. root.g.com. (
+                        0
+                        1H
+                        10M
+                        1W
+                        1D
+)
+
+            IN        NS        ns1
+            IN        NS        ns2
+            IN        MX  10    mail
+ns1         IN        A         10.10.10.10
+ns2         IN        A         10.10.10.20
+mail        IN        A         10.10.10.9
+
+www         IN        A         10.10.10.100
+ftp         IN        A         10.10.10.200
+
+smtp        IN        CNAME     mail
+pop         IN        CNAME     mail
+
+tech        IN        NS        ns1.tech
+tech        IN        NS        ns2.tech
+ns1.tech    IN        A         10.10.10.10
+ns2.tech    IN        A         10.10.10.20
+
+mark        IN        NS        ns.mark
+ns.mark     IN        A         10.10.10.20
+
+
