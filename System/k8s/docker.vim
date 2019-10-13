@@ -1,3 +1,38 @@
+容器 就是在隔离的环境里运行的一个进程 进程退出容器就会消失 隔离环境拥有自己的系统文件 ip地址 主机名
+
+linux开机启动流程
+bios开机硬件自检
+根据bios设置的优选启动项boot 网卡 硬盘 u盘 光驱
+读取mbr引导 2T UEFI gpt分区 mbr硬盘分区信息 内核加载路径
+加载内核
+启动第一个sbin/init(6) systemd(7)
+系统初始化完成
+运行服务
+
+容器启动
+公用宿主机内核
+容器第一个进程直接启动服务
+轻量级 损耗少 启动快 性能高
+
+
+#镜像 导出 导入
+docker image save alpine:latest > docker_alpine.tar.gz
+docker rmi alpine:latest
+docker load -i docker_alpine.tar.gz
+
+#查看镜像分层信息 文件有变化的层数
+docker image history nginx
+镜像分层 一条指令一层 yum安装 yum clean 放在一行执行 减小镜像空间
+文件系统overlay
+
+docker镜像加速
+
+vim /etc/docker/daemon.json
+{
+  ""registry-mirrors":": ["https://registry.docker-cn.com"],
+}
+
+
 docker-ce 社区版
 
 若已安装docker 清除如下
@@ -23,24 +58,32 @@ yum list docker-ce --showduplicates | sort -r
 
 yum install docker-ce-<VERSION STRING>
 
+#selinux报错执行
+yum install https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-ce-selinux-17.03.2.ce-1.el7.centos.noarch.rpm
+
+yum install docker-ce-17.03.2.ce-1.el7.centos
+
 #docker配置
-#data-rootdocker数据持久化存储的根目录/var/lib/docker 更改为/data/docker
-mkdir /data/docker
-vim /etc/docker/daemon.json
+#data-rootdocker数据持久化存储的根目录/var/lib/docker 更改为/data/docker/data
+mkdir /data/docker/data -p
+mkdir /etc/docker
+cat > /etc/docker/daemon.json << EOF
 {
   "registry-mirrors": ["https://d8b3zdiw.mirror.aliyuncs.com"],
   "dns": ["223.5.5.5"],
-  "data-root": "/data/docker"
+  "graph": "/data/docker/data"
 }
+EOF
 
-#api操作 docker 开启远程端口 默认端口2375
+
+#api操作 docker 开启远程端口 默认端口2376
 vim /usr/lib/systemd/system/docker.service
-ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -H fd://
+ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2376 -H unix:///var/run/docker.sock -H fd://
 
 systemctl daemon-reload
 systemctl restart docker
 
-docker -H 127.0.0.1:2375 info
+docker -H 127.0.0.1:2376 info
 
 #拉取centos镜像
 docker pull centos
@@ -64,6 +107,8 @@ docker rm $(docker ps -a -q status=exited)
 
 
 ##############################网络#########################
+源地址(宿主机):目标地址(容器)
+
 -P 随机端口
 -p 指定端口映射 对外端口:容器内端口
 -p 81:80/udp  指定udp端口
@@ -73,6 +118,14 @@ docker rm $(docker ps -a -q status=exited)
 docker exec    #启动新进程 进入容器
 docker attach  #作为主进程进入容器
 #容器内主进程关闭后 exec attach 进入的容器都会推出
+
+
+
+
+
+
+
+
 
 ###################Dockerfile############################
 基础的操作镜像 ubuntu debian  centos alpine
@@ -110,6 +163,7 @@ COPY 复制文件
 
 ADD 更高级复制文件
   <源路径>为tar压缩文件 压缩格式为gzip bzip2 xz情况 ADD指令将自动解压这个压缩文件到 <目标路径>
+  COPY不会解压
 
 CMD 容器启动命令
   CMD 设置容器启动后默认执行的命令及其参数，
@@ -170,6 +224,8 @@ ENV 设置环境变量
   ENV <key>=<Value> <key>=<value>
 
 VOLUME 挂载匿名卷
+ docker volume ls 显示创建的随机卷
+ 启动容器随机创建不同卷 将VOLUME指定目录里内容持久化
 
 EXPOSE 声明端口
   仅仅声明容器打算使用什么端口 并不会自动在宿主机进行端口映射
@@ -180,8 +236,35 @@ WORKDIR 指定工作目录 (切换目录)
   以后各层的当前目录就被改为指定的目录 如果目录不存在 WORKDIR会帮你建立目录
   WORKDIR /data
   RUN ...
+  使用 docker run -it 进入容器时 pwd显示的路径就是WORKDIR指定的目录
 
 USER 指定当前用户
+
+健康检查
+将当前文件添加到容器内
+ADD test.sh /test.sh
+
+健康检查周期10s 超时3s 重试3次 健康检查运行的进程是否有异常 退出码 0 或 非0
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 CMD /bin/bash /test.sh
+
+#########以脚本方式启动 传入变量
+#!/bin/bash
+echo "$SSH_PWD" | password --stdin root
+service sshd restart
+nginx -g "daemon off;"
+
+
+容器间互访
+docker run -it --link 容器B名称:容器B别名 image_A:tag /bin/bash
+进入image_A:tag容器内 容器hosts文件中有   容器B ip 和 容器B别名
+
+hosts文件 每次启动容器时挂载进容器里边的
+通过主机名或别名就能连接到 --link 指定的容器
+--link为单向 原理就是hosts内加一条主机的解析
+
+
+docker run -it --link mysql:mysql nginx_web:v1 /bin/bash
+ping mysql
 
 
 
@@ -255,19 +338,45 @@ docker network connect my_bridge_2 container_name
 #用户自定义网络 可以ping通相互的的容器名称
 #自定义 容器名不要定义 真实域名  否则容器间不能相互ping通
 
+
+################### 跨主机网络通信 之 macvlan (手动指定IP)
+#跨主机容器之间通信 Maclan网络 (需手动指定IP地址)
+
+#默认一个物理网卡只有一个物理地址 虚拟多个mac地址
+#与宿主机网卡在同一个物理网络中
+
+#创建macvlan网络
+docker network create --driver macvlan --subnet 192.168.1.0/24 --gateway 192.168.1.254 -o parent=eth0 macvlan_1
+
+#设置eth0网卡为混杂模式 (centos可以不用设置)
+ip link set eth1 promisc on
+
+#创建使用macvlan网络的容器 (手动指定IP地址 IP不能冲突)
+docker run -it --network macvlan_1 --ip=192.168.1.100 centos7:v1 /bin/bash
+
+Maclan 公用宿主机网络
+
+##############跨主机网络通信 之 overlay consul数据库存储(自动分配IP)
 # 192.168.1.91 操作
-docker run -d -p 8500:8500 --name consul progrium/consul -server -bootstrap
+#-h, --hostname string     Container host name
+#-server -bootstrap     作为参数跟在entrypoint指定命令后边启动
+#IP 地址分配都集中的consul数据库中
+
+docker run -d -p 8500:8500 --restart=always --name consul -h consul progrium/consul -server -bootstrap
 
 cat /etc/docker/daemon.json
 {
   "registry-mirrors": ["https://d8b3zdiw.mirror.aliyuncs.com"],
   "dns": ["223.5.5.5"],
   "data-root": "/data/docker",
-  "cluster-store": "consul://192.168.1.91:8500",
-  "cluster-advertise": "192.168.1.91:4000"
-}
 
-docker run -it --rm --network ov_net1 busybox
+  #监听端口 又启动socket systemd中可能有配置 两处配置更改一处即可
+  "hosts": ["tcp://0.0.0.0:2376", "unix:///var/run/docker.sock"],
+  #集群存储信息Ip地址
+  "cluster-store": "consul://192.168.1.91:8500",
+  #区分每一个节点的唯一标识
+  "cluster-advertise": "192.168.1.91:2376"
+}
 
 #192.168.1.90 操作
 cat /etc/docker/daemon.json
@@ -275,19 +384,37 @@ cat /etc/docker/daemon.json
   "registry-mirrors": ["https://d8b3zdiw.mirror.aliyuncs.com"],
   "dns": ["223.5.5.5"],
   "data-root": "/data/docker",
+
+  #监听端口 又启动socket systemd中可能有配置
+  "hosts": ["tcp://0.0.0.0:2376", "unix:///var/run/docker.sock"],
+  #集群存储信息IP地址 同一个
   "cluster-store": "consul://192.168.1.91:8500",
-  "cluster-advertise": "192.168.1.90:4000"
+  #区分每一个节点的唯一标识
+  "cluster-advertise": "192.168.1.90:2376"
 }
 
-#创建网络 不指定IP范围
+systemctl restart docker
+
+#创建网络 在一台机器上执行即可
+#创建网络 不指定IP范围 -d --driver
 docker network create -d overlay ov_net1
 docker run -it --rm --network ov_net1 busybox
 
-#创建网络 指定IP范围
-docker network create -d overlay --subnet 10.10.0.0/16 ov_net2
+#创建网络 指定不存在的网段 -d --driver
+docker network create -d overlay --subnet 10.10.0.0/16 --gateway 10.10.0.254 ov_net2
+
+
+docker network ls
+
+#启动容器测试 每个容器有两块网卡 eth0实现容器间通信 eth1实现容器访问外网
 docker run -it --rm --network ov_net2 busybox
 
-##############overlay network###
+eth0 为宿主机之间建立隧道 容器见相互连接
+eth1 通过docker_gwbridge网桥 nat转换 通过宿主机网卡 访问外网
+
+访问sonsul http://192.168.1.91:8500
+
+##############跨主机网络通信 之 overlay network (etcd)###
 #跨宿主机 docker容器间通信
 tar zxvf etcd-v3.3.12-linux-amd64.tar.gz -C /usr/local/
 chown root.root /usr/local/etcd-v3.3.12-linux-amd64/ -R
@@ -318,9 +445,9 @@ nohup /usr/local/etcd/etcd --name infra-51 \
 
 vim /usr/lib/systemd/system/docker.service
 #10-10-10-50
-ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H fd:// --containerd=/run/containerd/containerd.sock --cluster-store=etcd://10.10.10.50:2379 --cluster-advertise=10.10.10.50:2375
+ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2376 -H fd:// --containerd=/run/containerd/containerd.sock --cluster-store=etcd://10.10.10.50:2379 --cluster-advertise=10.10.10.50:2376
 #10-10-10-51
-ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H fd:// --containerd=/run/containerd/containerd.sock --cluster-store=etcd://10.10.10.51:2379 --cluster-advertise=10.10.10.51:2375
+ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2376 -H fd:// --containerd=/run/containerd/containerd.sock --cluster-store=etcd://10.10.10.51:2379 --cluster-advertise=10.10.10.51:2376
 
 
 #创建overlay 网络
@@ -394,6 +521,18 @@ docker exec -it nginx_2 /bin/bash
 docker run -d --name mysql -v mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=wordpress mysql:5.7
 
 docker run -d -e WORDPRESS_DB_HOST=mysql:3306 --link mysql -p 8082:80 wordpress
+
+
+#指定目录卷
+docker run -d -p 80:80 -v /data/volume/nginx:/usr/share/nginx/html nginx
+
+#docker自动创建卷
+docker run -d --name nginx_v -p 81:80 -v nginx:/usr/share/nginx/html nginx
+
+docker volume inspect nginx
+
+docker volume ls
+
 ################################
 一个容器里可以运行多个进程，所以总是可以运行新的进程去看看里面发生了什么。
 
@@ -423,7 +562,7 @@ pip install docker-compose
 
 
 
-cd /opt/
+cd /data/docker-compose/web
 vim docker-compose.yml
 
 web1:
@@ -453,6 +592,46 @@ haproxy:
 
 
 ###############
+vim docker-compose.yml
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data: /var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: pas4wd
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:lastest
+    volumes:
+      - web_data:/var/www/html
+    ports:
+      - "80"
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+
+volumes:
+  db_data:
+  web_data:
+#####################################
+
+#ports:
+  - "80:80" 宿主机端口:容器端口
+  - "80"    宿主机随机端口 映射到容器80端口 scale时候使用随机端口映射
+
+
+##############
 #docker-compose.yml
 
 #启动方式 -d 后台启动

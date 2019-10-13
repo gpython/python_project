@@ -30,6 +30,36 @@ do
 done
 
 #############CentOS7#######################
+
+cp /etc/sysconfig/network-scripts/ifcfg-eth0{,_}
+cp /etc/sysconfig/network-scripts/ifcfg-eth1{,_}
+cat >/etc/sysconfig/network-scripts/ifcfg-eth1 <<EOF
+TYPE="Ethernet"
+BOOTPROTO="static"
+DEFROUTE="yes"
+IPV4_FAILURE_FATAL="no"
+NAME="eth0"
+DEVICE="eth0"
+ONBOOT="yes"
+IPADDR=192.168.1.50
+GATEWAY=192.168.1.1
+NETMASK=255.255.255.0
+DNS1=192.168.1.1
+EOF
+
+cat > /etc/sysconfig/network-scripts/ifcfg-eth1 << EOF
+TYPE="Ethernet"
+BOOTPROTO="static"
+DEFROUTE="yes"
+IPV4_FAILURE_FATAL="no"
+NAME="eth1"
+DEVICE="eth1"
+ONBOOT="yes"
+IPADDR=10.10.10.50
+NETMASK=255.255.255.0
+EOF
+
+
 #CentOS7
 yum -y install epel-release
 yum update
