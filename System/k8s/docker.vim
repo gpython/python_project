@@ -120,13 +120,6 @@ docker attach  #作为主进程进入容器
 #容器内主进程关闭后 exec attach 进入的容器都会推出
 
 
-
-
-
-
-
-
-
 ###################Dockerfile############################
 基础的操作镜像 ubuntu debian  centos alpine
 docker空白镜像 scratch go语言开 发的很多程序会使用此空白镜像来 制作镜像
@@ -548,6 +541,18 @@ docker stats
 
 
 #####################docker-compose######################
+yum install python-pip
+
+mkdir ~/.pip
+cat > .pip/pip.conf << EOF
+[global]
+timeout = 60
+index-url = http://pypi.douban.com/simple
+trusted-host = pypi.douban.com
+EOF
+
+pip install docker-compose
+
 Service
 
 一个service代表一个container 这个container可以从dockerhub的image来创建
@@ -555,12 +560,6 @@ Service
 
 service的启动类似docker run 可以指定network 和 volume
 可以给service指定network 和volume的引用
-
-
-
-pip install docker-compose
-
-
 
 cd /data/docker-compose/web
 vim docker-compose.yml
@@ -699,6 +698,37 @@ docker-compose build
 日志记录    Docker将会收集和记录每个进程容器的标准流(stdin stdout stderr)
 变更管理    容器文件系统的变更可以提交到新的镜像中 并可重复使用以创建更多的容器 无需使用模板或手动配置
 交互shell  分配虚拟终端 关联到任何容器的标准输入上
+
+##########私有仓库 Harbor###########
+Harbor依赖docker 和docker-compose
+
+wget https://storage.googleapis.com/harbor-releases/release-1.7.0/harbor-offline-installer-v1.7.1.tgz
+tar zxvf harbor-offline-installer-v1.7.1.tgz -C /data
+cd /data/harbor
+
+#配置
+vim harbor.cfg
+hostname=192.168.1.91
+
+#安装
+./install.sh
+
+#登录进http://192.168.1.74/harbor/projects 创建项目
+
+#上传镜像到harbor
+#1)添加白名单
+vim /etc/docker/daemon.json
+"insecure-registries": ["192.168.1.91"],
+
+#2)登录harbor
+docker login 192.168.1.91
+
+#3)打标签
+docker tag nginx:lastest 192.168.1.91/registry/nginx:v1
+
+#4)push
+docker 192.168.1.91/registry/nginx:v1
+
 
 
 ##################Dcoker Swarm###############################
