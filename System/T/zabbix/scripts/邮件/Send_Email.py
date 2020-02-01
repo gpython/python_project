@@ -20,8 +20,8 @@ import sys
 current_time = time.strftime("%F %T", time.localtime(time.time()))
 
 MAIL_HOST = 'smtp.163.com'
-MAIL_USER = 'artup_d@163.com'
-MAIL_PASSWD = 'www.artup.com'
+MAIL_USER = 'a@163.com'
+MAIL_PASSWD = 'com'
 
 def send_email(Mail_To, Title, Content):
   msg = MIMEText(Content, _subtype='plain', _charset='utf8')
